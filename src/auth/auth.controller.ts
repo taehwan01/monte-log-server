@@ -29,7 +29,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 600000,
-        sameSite: 'strict',
+        sameSite: 'lax',
       });
 
       return res.redirect(`${clientUrl}`);

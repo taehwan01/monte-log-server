@@ -19,6 +19,7 @@ async function bootstrap() {
     credentials: true, // 쿠키를 포함한 요청을 허용
   });
 
-  await app.listen(4000); // 서버 시작
+  const port = process.env.PORT || 3000;
+  await app.listen(3000);
 }
 bootstrap();

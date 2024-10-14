@@ -24,12 +24,14 @@ export class AuthController {
       const clientUrl = this.configService.get<string>('CLIENT_URL');
 
       const sessionIdKey = this.configService.get<string>('SESSION_ID_KEY');
+      const domain = this.configService.get<string>('DOMAIN');
 
       res.cookie(sessionIdKey, sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 600000,
         sameSite: process.env.NODE_ENV === 'production' && 'none',
+        domain: process.env.NODE_ENV === 'production' && '.' + domain,
       });
 
       return res.redirect(`${clientUrl}`);

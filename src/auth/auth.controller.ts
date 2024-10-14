@@ -30,6 +30,7 @@ export class AuthController {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 600000,
         sameSite: process.env.NODE_ENV === 'production' && 'none',
+        domain: '.monte-log.com',
       });
 
       return res.redirect(`${clientUrl}`);

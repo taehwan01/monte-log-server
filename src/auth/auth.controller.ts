@@ -29,8 +29,8 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 600000,
-        sameSite: process.env.NODE_ENV === 'production' && 'strict',
-        domain: process.env.NODE_ENV === 'production' && 'monte-log.com',
+        sameSite: 'none',
+        domain: process.env.NODE_ENV === 'production' && domain,
       });
 
       return res.redirect(`${clientUrl}`);

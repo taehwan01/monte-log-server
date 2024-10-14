@@ -66,7 +66,7 @@ export class AuthController {
       res.clearCookie(sessionIdKey, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'none',
       }); // 클라이언트 측 쿠키 삭제
 
       return res.status(200).json({ message: '로그아웃 성공' });

@@ -24,12 +24,13 @@ export class AuthController {
       const clientUrl = this.configService.get<string>('CLIENT_URL');
 
       const sessionIdKey = this.configService.get<string>('SESSION_ID_KEY');
-
+      const domain = this.configService.get<string>('DOMAIN');
       res.cookie(sessionIdKey, sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 600000,
-        sameSite: process.env.NODE_ENV === 'production' && 'none',
+        sameSite: process.env.NODE_ENV === 'production' && 'strict',
+        domain: process.env.NODE_ENV === 'production' && 'monte-log.com',
       });
 
       return res.redirect(`${clientUrl}`);
@@ -65,6 +66,7 @@ export class AuthController {
       res.clearCookie(sessionIdKey, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        maxAge: 0,
         sameSite: 'none',
       }); // 클라이언트 측 쿠키 삭제
 

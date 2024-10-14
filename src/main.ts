@@ -17,6 +17,8 @@ async function bootstrap() {
   app.enableCors({
     origin: clientUrl, // Next.js가 실행되는 주소
     credentials: true, // 쿠키를 포함한 요청을 허용
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // OPTIONS 메서드 포함
+    allowedHeaders: 'Content-Type, Authorization',
   });
 
   const port = process.env.PORT || 4000;

@@ -63,7 +63,14 @@ export class AuthController {
     if (sessionId) {
       await this.authService.deleteSession(sessionId); // Redis에서 세션 삭제
 
-      res.clearCookie(sessionIdKey); // 클라이언트에 저장된 쿠키 삭제
+      const domain = this.configService.get<string>('DOMAIN');
+
+      res.clearCookie(sessionIdKey, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        domain: process.env.NODE_ENV === 'production' && domain,
+      });
 
       return res.status(200).json({ message: '로그아웃 성공' });
     }

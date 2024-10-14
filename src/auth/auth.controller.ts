@@ -27,7 +27,7 @@ export class AuthController {
       const domain = this.configService.get<string>('DOMAIN');
       res.cookie(sessionIdKey, sessionId, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         maxAge: 600000,
         sameSite: 'none',
         domain: process.env.NODE_ENV === 'production' && domain,

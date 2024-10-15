@@ -31,6 +31,8 @@ export class PostService {
         {
           title: createPostDto.title,
           content: createPostDto.content,
+          preview_content: createPostDto.preview_content,
+          thumbnail: createPostDto.thumbnail,
           member_id: memberId,
           category_id: categoryId,
         },

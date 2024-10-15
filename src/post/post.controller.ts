@@ -36,7 +36,7 @@ export class PostController {
   // 상세 조회 API
   @Get(':id') // 게시물 ID로 조회
   async getPostById(@Param('id') id: number) {
-    const post = await this.postService.getPostById(id);
+    const post = await this.postService.getPostWithCategoryById(id);
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }

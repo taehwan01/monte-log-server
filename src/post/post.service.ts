@@ -78,15 +78,23 @@ export class PostService {
     return newCategory.category_id; // 새로 생성된 카테고리의 ID 반환
   }
 
-  async getPostById(id: number) {
+  async getPostWithCategoryById(id: number) {
     const { data, error } = await this.supabase
       .from('post')
-      .select('*')
+      .select(
+        `
+        post_id,
+        title,
+        content,
+        created_at,
+        category:category(name)  -- 카테고리 이름 포함하여 조회
+      `,
+      )
       .eq('post_id', id)
-      .single();
+      .single(); // 단일 게시물 조회
 
     if (error) {
-      throw new Error(`Error fetching post with ID ${id} : ${error.message}`);
+      throw new Error(error.message);
     }
 
     return data;

@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 import { CreatePostDto } from './create-post.dto';
+import { RedisService } from 'src/common/redis/redis.service';
 
 @Injectable()
 export class PostService {
   private supabase;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private redisService: RedisService,
+  ) {
     // 환경 변수에서 Supabase URL과 API 키를 불러옴
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const supabaseKey = this.configService.get<string>('SUPABASE_KEY');
@@ -23,25 +27,70 @@ export class PostService {
   // }
   // 게시글 페이징 조회 메서드 추가
   async getPosts(page: number, limit: number) {
-    const offset = (page - 1) * limit; // 페이지 번호와 페이지당 게시글 수로 오프셋 계산
+    const offset = (page - 1) * limit;
 
-    // 게시물 총 개수 가져오기
-    const { count } = await this.supabase
-      .from('post')
-      .select('*', { count: 'exact' });
+    // 전체 게시물 수 캐시 확인
+    const cachedTotalCount = await this.redisService.get('total_post_count');
+    let totalCount: number;
 
+    if (cachedTotalCount) {
+      totalCount = Number(cachedTotalCount); // 캐시된 전체 게시물 수가 있으면 사용
+    } else {
+      // 캐시된 값이 없으면 DB에서 전체 게시물 수 조회 후 캐싱
+      const { count } = await this.supabase
+        .from('post')
+        .select('post_id', { count: 'exact' });
+
+      totalCount = count;
+
+      await this.redisService.set(
+        'total_post_count',
+        String(totalCount),
+        86400,
+      ); // 24시간 TTL로 캐싱
+    }
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // 페이지 1인 경우, 캐시된 게시물 목록을 먼저 확인
+    if (page === 1) {
+      const cachedPostsPage1 = await this.redisService.get('posts_page_1');
+      if (cachedPostsPage1) {
+        return {
+          posts: JSON.parse(cachedPostsPage1),
+          totalPages, // 전체 페이지 수 반환
+        };
+      }
+    }
+
+    // 캐시가 없는 경우 DB에서 게시물 가져오기
     const { data, error } = await this.supabase
       .from('post')
-      .select('*')
+      .select(
+        `
+        post_id,
+        title,
+        preview_content,
+        created_at,
+        thumbnail,
+        category:category(name)  -- 카테고리 이름 포함하여 조회
+      `,
+      )
       .range(offset, offset + limit - 1); // 페이지 번호와 페이지당 게시글 수로 조회
 
     if (error) {
       throw new Error(error.message);
     }
 
-    const totalPages = Math.ceil(count / limit);
+    // 1페이지 데이터 캐싱 (24시간)
+    if (page === 1) {
+      await this.redisService.set('posts_page_1', JSON.stringify(data), 86400); // 24시간 캐싱
+    }
 
-    return { posts: data, totalPages };
+    return {
+      posts: data,
+      totalPages,
+    };
   }
 
   async createPost(createPostDto: CreatePostDto, memberId: number) {

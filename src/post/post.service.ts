@@ -18,43 +18,65 @@ export class PostService {
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
-  // async getPosts() {
-  //   const { data, error } = await this.supabase.from('post').select('*');
-  //   if (error) {
-  //     throw new Error(error.message);
-  //   }
-  //   return data;
-  // }
   // 게시글 페이징 조회 메서드 추가
   async getPosts(page: number, limit: number) {
     const offset = (page - 1) * limit;
 
-    // 전체 게시물 수 캐시 확인
-    const cachedTotalCount = await this.redisService.get('total_post_count');
+    // Redis 연결 상태 확인
+    // const isRedisConnected = this.redisService.
+
+    let cachedTotalCount: string | null = null;
     let totalCount: number;
+
+    // Redis가 연결된 경우에만 캐시 시도
+    // if (isRedisConnected) {
+    try {
+      cachedTotalCount = await this.redisService.get('total_post_count');
+    } catch (err) {
+      console.error('Redis에서 total_post_count 가져오기 실패:', err.message);
+    }
+    // }
 
     if (cachedTotalCount) {
       totalCount = Number(cachedTotalCount); // 캐시된 전체 게시물 수가 있으면 사용
     } else {
       // 캐시된 값이 없으면 DB에서 전체 게시물 수 조회 후 캐싱
-      const { count } = await this.supabase
+      const { count, error } = await this.supabase
         .from('post')
         .select('post_id', { count: 'exact' });
 
+      if (error) {
+        throw new Error(`게시물 수 조회 오류: ${error.message}`);
+      }
+
       totalCount = count;
 
-      await this.redisService.set(
-        'total_post_count',
-        String(totalCount),
-        86400,
-      ); // 24시간 TTL로 캐싱
+      // Redis가 연결된 경우에만 캐싱
+      // if (isRedisConnected) {
+      try {
+        await this.redisService.set(
+          'total_post_count',
+          String(totalCount),
+          86400,
+        ); // 24시간 TTL로 캐싱
+      } catch (err) {
+        console.error('Redis에 total_post_count 캐싱 실패:', err.message);
+      }
+      // }
     }
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    // 페이지 1인 경우, 캐시된 게시물 목록을 먼저 확인
+    // 페이지 1인 경우, Redis가 연결된 경우에만 캐시된 게시물 목록 확인
     if (page === 1) {
-      const cachedPostsPage1 = await this.redisService.get('posts_page_1');
+      let cachedPostsPage1: string | null = null;
+
+      try {
+        cachedPostsPage1 = await this.redisService.get('posts_page_1');
+      } catch (err) {
+        console.error('Redis에서 posts_page_1 가져오기 실패:', err.message);
+      }
+
       if (cachedPostsPage1) {
         return {
           posts: JSON.parse(cachedPostsPage1),
@@ -79,12 +101,20 @@ export class PostService {
       .range(offset, offset + limit - 1); // 페이지 번호와 페이지당 게시글 수로 조회
 
     if (error) {
-      throw new Error(error.message);
+      throw new Error(`게시물 조회 오류: ${error.message}`);
     }
 
-    // 1페이지 데이터 캐싱 (24시간)
+    // 페이지 1인 경우, Redis가 연결된 경우에만 캐싱
     if (page === 1) {
-      await this.redisService.set('posts_page_1', JSON.stringify(data), 86400); // 24시간 캐싱
+      try {
+        await this.redisService.set(
+          'posts_page_1',
+          JSON.stringify(data),
+          86400,
+        ); // 24시간 캐싱
+      } catch (err) {
+        console.error('Redis에 posts_page_1 캐싱 실패:', err.message);
+      }
     }
 
     return {

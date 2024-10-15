@@ -18,9 +18,16 @@ import { User } from 'src/common/interface/user.interface';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
+  // @Get()
+  // async getPosts() {
+  //   return this.postService.getPosts();
+  // }
+  // 게시글 페이징 조회 API
   @Get()
-  async getPosts() {
-    return this.postService.getPosts();
+  async getPosts(@Req() req: Request) {
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    return this.postService.getPosts(page, limit);
   }
 
   @Post()

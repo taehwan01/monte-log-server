@@ -14,12 +14,34 @@ export class PostService {
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
-  async getPosts() {
-    const { data, error } = await this.supabase.from('post').select('*');
+  // async getPosts() {
+  //   const { data, error } = await this.supabase.from('post').select('*');
+  //   if (error) {
+  //     throw new Error(error.message);
+  //   }
+  //   return data;
+  // }
+  // 게시글 페이징 조회 메서드 추가
+  async getPosts(page: number, limit: number) {
+    const offset = (page - 1) * limit; // 페이지 번호와 페이지당 게시글 수로 오프셋 계산
+
+    // 게시물 총 개수 가져오기
+    const { count } = await this.supabase
+      .from('post')
+      .select('*', { count: 'exact' });
+
+    const { data, error } = await this.supabase
+      .from('post')
+      .select('*')
+      .range(offset, offset + limit - 1); // 페이지 번호와 페이지당 게시글 수로 조회
+
     if (error) {
       throw new Error(error.message);
     }
-    return data;
+
+    const totalPages = Math.ceil(count / limit);
+
+    return { posts: data, totalPages };
   }
 
   async createPost(createPostDto: CreatePostDto, memberId: number) {

@@ -77,4 +77,18 @@ export class PostService {
 
     return newCategory.category_id; // 새로 생성된 카테고리의 ID 반환
   }
+
+  async getPostById(id: number) {
+    const { data, error } = await this.supabase
+      .from('post')
+      .select('*')
+      .eq('post_id', id)
+      .single();
+
+    if (error) {
+      throw new Error(`Error fetching post with ID ${id} : ${error.message}`);
+    }
+
+    return data;
+  }
 }

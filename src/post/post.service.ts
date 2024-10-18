@@ -145,7 +145,13 @@ export class PostService {
       throw new Error(error.message);
     }
 
-    console.log('data', data);
+    // 게시글 생성하고 Redis 캐시 삭제
+    try {
+      await this.redisService.del('posts_page_1');
+      await this.redisService.del('total_post_count');
+    } catch (err) {
+      console.error('Redis 캐시 갱신 실패:', err.message);
+    }
 
     return data;
   }

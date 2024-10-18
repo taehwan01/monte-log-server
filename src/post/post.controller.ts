@@ -18,10 +18,6 @@ import { User } from 'src/common/interface/user.interface';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  // @Get()
-  // async getPosts() {
-  //   return this.postService.getPosts();
-  // }
   // 게시글 페이징 조회 API
   @Get()
   async getPosts(@Req() req: Request) {
@@ -30,6 +26,7 @@ export class PostController {
     return this.postService.getPosts(page, limit);
   }
 
+  // 게시글 생성 API
   @Post()
   @UseGuards(AuthGuard)
   async createPost(

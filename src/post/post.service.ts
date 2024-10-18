@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 import { CreatePostDto } from './create-post.dto';
 import { RedisService } from 'src/common/redis/redis.service';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class PostService {
@@ -57,8 +58,8 @@ export class PostService {
         await this.redisService.set(
           'total_post_count',
           String(totalCount),
-          86400,
-        ); // 24시간 TTL로 캐싱
+          3600,
+        ); // 1시간 TTL로 캐싱
       } catch (err) {
         console.error('Redis에 total_post_count 캐싱 실패:', err.message);
       }
@@ -85,33 +86,6 @@ export class PostService {
       }
     }
 
-    //   create table
-    //   public.post (
-    //     post_id serial not null,
-    //     title character varying(255) not null,
-    //     content text not null,
-    //     category_id integer not null,
-    //     member_id integer not null,
-    //     created_at timestamp without time zone null default current_timestamp,
-    //     preview_content character varying(200) not null,
-    //     thumbnail text not null,
-    //     constraint post_pkey primary key (post_id),
-    //     constraint post_category_id_fkey foreign key (category_id) references category (category_id),
-    //     constraint post_member_id_fkey foreign key (member_id) references member (member_id)
-    //   ) tablespace pg_default;
-
-    // create table
-    //   public.likes (
-    //     like_id serial not null,
-    //     post_id integer null,
-    //     like_key character varying(255) not null,
-    //     created_at timestamp without time zone null default current_timestamp,
-    //     constraint likes_pkey primary key (like_id),
-    //     constraint likes_post_id_like_key_key unique (post_id, like_key),
-    //     constraint likes_post_id_fkey foreign key (post_id) references post (post_id)
-    //   ) tablespace pg_default;
-
-    // 위 2 테이블을 기준으로 게시물을 가져올 때, 각 게시물의 카테고리 이름과 좋아요 수를 함께 조회
     // 캐시가 없는 경우 DB에서 게시물 가져오기
     const { data, error } = await this.supabase
       .from('post')
@@ -136,11 +110,7 @@ export class PostService {
     // 페이지 1인 경우, Redis가 연결된 경우에만 캐싱
     if (page === 1) {
       try {
-        await this.redisService.set(
-          'posts_page_1',
-          JSON.stringify(data),
-          86400,
-        ); // 24시간 캐싱
+        await this.redisService.set('posts_page_1', JSON.stringify(data), 3600); // 1시간 TTL로 캐싱
       } catch (err) {
         console.error('Redis에 posts_page_1 캐싱 실패:', err.message);
       }
@@ -326,5 +296,41 @@ export class PostService {
     }
 
     return count;
+  }
+
+  // 스케줄러로 Redis 캐시 갱신
+  @Cron('0 */1 * * *') // 매 시간 0분에 실행
+  async refreshPostCache() {
+    const page = 1;
+    const limit = 7; // 프론트엔드에서 7개씩 보여주기로 했으므로 7로 설정
+    const offset = (page - 1) * limit;
+
+    console.log('Redis posts_page_1 캐시 갱신');
+
+    try {
+      const { data, error } = await this.supabase
+        .from('post')
+        .select(
+          `
+        post_id,
+        title,
+        preview_content,
+        created_at,
+        thumbnail,
+        category:category(name),
+        like_count:likes(count)[0]
+      `,
+        )
+        .order('post_id', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw new Error(`게시물 조회 오류: ${error.message}`);
+      }
+
+      await this.redisService.set('posts_page_1', JSON.stringify(data), 3600); // 1시간 TTL로 캐싱
+    } catch (err) {
+      console.error('Redis 캐시 갱신 실패:', err.message);
+    }
   }
 }

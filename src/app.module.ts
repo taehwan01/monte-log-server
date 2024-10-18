@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { PostModule } from './post/post.module';
 import { AuthModule } from './auth/auth.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     PostModule, // 포스트 관련 모듈 임포트
     AuthModule, // 인증 관련 모듈 임포트
+    ScheduleModule.forRoot(), // 스케줄러 모듈 임포트
   ],
   controllers: [AppController],
   providers: [AppService],

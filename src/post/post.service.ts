@@ -98,6 +98,8 @@ export class PostService {
         category:category(name)  -- 카테고리 이름 포함하여 조회
       `,
       )
+      //최신순으로 정렬하는 것은 id를 기준으로 내림차순으로 정렬
+      .order('post_id', { ascending: false })
       .range(offset, offset + limit - 1); // 페이지 번호와 페이지당 게시글 수로 조회
 
     if (error) {

@@ -85,6 +85,33 @@ export class PostService {
       }
     }
 
+    //   create table
+    //   public.post (
+    //     post_id serial not null,
+    //     title character varying(255) not null,
+    //     content text not null,
+    //     category_id integer not null,
+    //     member_id integer not null,
+    //     created_at timestamp without time zone null default current_timestamp,
+    //     preview_content character varying(200) not null,
+    //     thumbnail text not null,
+    //     constraint post_pkey primary key (post_id),
+    //     constraint post_category_id_fkey foreign key (category_id) references category (category_id),
+    //     constraint post_member_id_fkey foreign key (member_id) references member (member_id)
+    //   ) tablespace pg_default;
+
+    // create table
+    //   public.likes (
+    //     like_id serial not null,
+    //     post_id integer null,
+    //     like_key character varying(255) not null,
+    //     created_at timestamp without time zone null default current_timestamp,
+    //     constraint likes_pkey primary key (like_id),
+    //     constraint likes_post_id_like_key_key unique (post_id, like_key),
+    //     constraint likes_post_id_fkey foreign key (post_id) references post (post_id)
+    //   ) tablespace pg_default;
+
+    // 위 2 테이블을 기준으로 게시물을 가져올 때, 각 게시물의 카테고리 이름과 좋아요 수를 함께 조회
     // 캐시가 없는 경우 DB에서 게시물 가져오기
     const { data, error } = await this.supabase
       .from('post')
@@ -95,12 +122,12 @@ export class PostService {
         preview_content,
         created_at,
         thumbnail,
-        category:category(name)  -- 카테고리 이름 포함하여 조회
+        category:category(name),
+        like_count:likes(count)[0]
       `,
       )
-      //최신순으로 정렬하는 것은 id를 기준으로 내림차순으로 정렬
       .order('post_id', { ascending: false })
-      .range(offset, offset + limit - 1); // 페이지 번호와 페이지당 게시글 수로 조회
+      .range(offset, offset + limit - 1);
 
     if (error) {
       throw new Error(`게시물 조회 오류: ${error.message}`);

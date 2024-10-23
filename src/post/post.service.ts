@@ -15,7 +15,9 @@ export class PostService {
   ) {
     // 환경 변수에서 Supabase URL과 API 키를 불러옴
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>('SUPABASE_KEY');
+    const supabaseKey = this.configService.get<string>(
+      'SUPABASE_SERVICE_ROLE_KEY',
+    );
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 

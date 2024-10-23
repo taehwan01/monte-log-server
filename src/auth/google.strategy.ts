@@ -22,7 +22,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
     // Supabase 클라이언트 설정
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>('SUPABASE_KEY');
+    const supabaseKey = this.configService.get<string>(
+      'SUPABASE_SERVICE_ROLE_KEY',
+    );
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 

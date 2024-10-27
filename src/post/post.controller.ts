@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   UseGuards,
   Req,
@@ -45,6 +46,18 @@ export class PostController {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
     return post;
+  }
+
+  // 게시글 수정 API
+  @Put(':id')
+  @UseGuards(AuthGuard)
+  async updatePost(
+    @Param('id') id: number,
+    @Body() createPostDto: CreatePostDto,
+    @Req() req: Request & { user: User },
+  ) {
+    const memberId = req.user.memberId;
+    return this.postService.updatePost(id, createPostDto, memberId);
   }
 
   // 좋아요 여부 확인 API

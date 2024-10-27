@@ -157,6 +157,42 @@ export class PostService {
     return data;
   }
 
+  // 게시글 수정 메서드 추가
+  async updatePost(
+    postId: number,
+    createPostDto: CreatePostDto,
+    memberId: number,
+  ) {
+    const categoryId = await this.ensureCategoryExists(createPostDto.category);
+
+    const { data, error } = await this.supabase
+      .from('post')
+      .update({
+        title: createPostDto.title,
+        content: createPostDto.content,
+        preview_content: createPostDto.preview_content,
+        thumbnail: createPostDto.thumbnail,
+        category_id: categoryId,
+      })
+      .eq('post_id', postId)
+      .eq('member_id', memberId)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // 게시글 수정하고 Redis 캐시 삭제
+    try {
+      await this.redisService.del('posts_page_1');
+    } catch (err) {
+      console.error('Redis 캐시 갱신 실패:', err.message);
+    }
+
+    return data;
+  }
+
   private async ensureCategoryExists(category: string): Promise<number> {
     const { data: existingCategory, error: findError } = await this.supabase
       .from('category')
@@ -197,6 +233,8 @@ export class PostService {
         title,
         content,
         created_at,
+        thumbnail,
+        preview_content,
         category:category(name)  -- 카테고리 이름 포함하여 조회
       `,
       )

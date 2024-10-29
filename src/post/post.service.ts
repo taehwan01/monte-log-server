@@ -355,8 +355,8 @@ export class PostService {
     return count;
   }
 
-  // 스케줄러로 Redis 캐시 갱신
-  @Cron('0 */1 * * *') // 매 시간 0분에 실행
+  // 스케줄러로 Redis 캐시 12시간마다 갱신
+  @Cron('0 */12 * * *')
   async refreshPostCache() {
     const page = 1;
     const limit = 7; // 프론트엔드에서 7개씩 보여주기로 했으므로 7로 설정
@@ -379,6 +379,7 @@ export class PostService {
         like_count:likes(count)[0]
       `,
         )
+        .eq('visibility', true) // 공개된 게시물만 조회
         .order('post_id', { ascending: false })
         .range(offset, offset + limit - 1);
 

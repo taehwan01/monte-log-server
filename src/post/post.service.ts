@@ -355,8 +355,8 @@ export class PostService {
     return count;
   }
 
-  // 스케줄러로 Redis 캐시 12시간마다 갱신
-  @Cron('0 */12 * * *')
+  // 스케줄러로 Redis 캐시 1시간마다 갱신
+  @Cron('0 0 * * * *')
   async refreshPostCache() {
     const page = 1;
     const limit = 7; // 프론트엔드에서 7개씩 보여주기로 했으므로 7로 설정

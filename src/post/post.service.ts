@@ -47,6 +47,7 @@ export class PostService {
       // 캐시된 값이 없으면 DB에서 전체 게시물 수 조회 후 캐싱
       const { count, error } = await this.supabase
         .from('post')
+        .eq('visibility', true) // 공개된 게시물만 조회
         .select('post_id', { count: 'exact' });
 
       if (error) {

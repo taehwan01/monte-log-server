@@ -37,6 +37,7 @@ export class PostService {
       cachedTotalCount = await this.redisService.get('total_post_count');
     } catch (err) {
       console.error('Redis에서 total_post_count 가져오기 실패:', err.message);
+      throw new Error('Redis 연결 실패');
     }
     // }
 
@@ -64,6 +65,7 @@ export class PostService {
         ); // 1시간 TTL로 캐싱
       } catch (err) {
         console.error('Redis에 total_post_count 캐싱 실패:', err.message);
+        throw new Error('Redis 연결 실패');
       }
       // }
     }
@@ -78,6 +80,7 @@ export class PostService {
         cachedPostsPage1 = await this.redisService.get('posts_page_1');
       } catch (err) {
         console.error('Redis에서 posts_page_1 가져오기 실패:', err.message);
+        throw new Error('Redis 연결 실패');
       }
 
       if (cachedPostsPage1) {
@@ -117,6 +120,7 @@ export class PostService {
         await this.redisService.set('posts_page_1', JSON.stringify(data), 3600); // 1시간 TTL로 캐싱
       } catch (err) {
         console.error('Redis에 posts_page_1 캐싱 실패:', err.message);
+        throw new Error('Redis 연결 실패');
       }
     }
 
@@ -246,12 +250,16 @@ export class PostService {
       .eq('post_id', id)
       .single(); // 단일 게시물 조회
 
-    if (!data.visibility) {
-      throw new Error('비공개 게시물입니다.');
-    }
-
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (!data) {
+      throw new Error('게시물이 존재하지 않습니다.');
+    }
+
+    if (!data.visibility) {
+      throw new Error('비공개 게시물입니다.');
     }
 
     return data;

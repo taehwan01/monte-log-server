@@ -4,4 +4,5 @@ export class CreatePostDto {
   category: string;
   preview_content: string;
   thumbnail: string;
+  visibility: boolean;
 }

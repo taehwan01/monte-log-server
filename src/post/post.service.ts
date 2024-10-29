@@ -98,10 +98,12 @@ export class PostService {
         preview_content,
         created_at,
         thumbnail,
+        visibility,
         category:category(name),
         like_count:likes(count)[0]
       `,
       )
+      .eq('visibility', true) // 공개된 게시물만 조회
       .order('post_id', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -135,6 +137,7 @@ export class PostService {
           content: createPostDto.content,
           preview_content: createPostDto.preview_content,
           thumbnail: createPostDto.thumbnail,
+          visibility: createPostDto.visibility,
           member_id: memberId,
           category_id: categoryId,
         },
@@ -172,6 +175,7 @@ export class PostService {
         content: createPostDto.content,
         preview_content: createPostDto.preview_content,
         thumbnail: createPostDto.thumbnail,
+        visibility: createPostDto.visibility,
         category_id: categoryId,
       })
       .eq('post_id', postId)
@@ -235,11 +239,16 @@ export class PostService {
         created_at,
         thumbnail,
         preview_content,
+        visibility,
         category:category(name)  -- 카테고리 이름 포함하여 조회
       `,
       )
       .eq('post_id', id)
       .single(); // 단일 게시물 조회
+
+    if (!data.visibility) {
+      throw new Error('비공개 게시물입니다.');
+    }
 
     if (error) {
       throw new Error(error.message);
@@ -357,6 +366,7 @@ export class PostService {
         preview_content,
         created_at,
         thumbnail,
+        visibility,
         category:category(name),
         like_count:likes(count)[0]
       `,

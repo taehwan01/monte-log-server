@@ -27,6 +27,14 @@ export class PostController {
     return this.postService.getPosts(page, limit);
   }
 
+  @Get('category/:categoryId')
+  async getPostsByCategory(@Req() req: Request) {
+    const categoryId = Number(req.params.categoryId);
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    return await this.postService.getPostsByCategory(categoryId, page, limit);
+  }
+
   // 게시글 생성 API
   @Post()
   @UseGuards(AuthGuard)

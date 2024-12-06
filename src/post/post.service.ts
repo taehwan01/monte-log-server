@@ -131,6 +131,50 @@ export class PostService {
     };
   }
 
+  async getPostsByCategory(categoryId: number, page: number, limit: number) {
+    const offset = (page - 1) * limit;
+
+    try {
+      const { data, error, count } = await this.supabase
+        .from('post')
+        .select(
+          `
+          post_id,
+          title,
+          preview_content,
+          created_at,
+          thumbnail,
+          visibility,
+          category:category(name),
+          like_count:likes(count)[0]
+        `,
+          { count: 'exact' },
+        )
+        .eq('category_id', categoryId)
+        .eq('visibility', true)
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw new Error(
+          `Category ID ${categoryId} 인 게시물 목록 가져오기 실패: ${error.message}`,
+        );
+      }
+
+      const totalPages = Math.ceil(count / limit);
+
+      return {
+        posts: data,
+        totalCount: count,
+        totalPages,
+        page,
+        limit,
+      };
+    } catch (error) {
+      console.error(error.message);
+      throw new Error('게시물 목록 조회 실패');
+    }
+  }
+
   async createPost(createPostDto: CreatePostDto, memberId: number) {
     const categoryId = await this.ensureCategoryExists(createPostDto.category);
 

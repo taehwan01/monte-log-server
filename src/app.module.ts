@@ -6,7 +6,7 @@ import { PostModule } from './post/post.module';
 import { AuthModule } from './auth/auth.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CategoryModule } from './category/category.module';
-import { VisitorModule } from './\bvisitor/visitor.module';
+import { VisitorModule } from './visitor/visitor.module';
 
 @Module({
   imports: [

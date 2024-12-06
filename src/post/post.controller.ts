@@ -101,8 +101,7 @@ export class PostController {
     }
 
     // IP 주소 가져오기
-    const ipAddress =
-      req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const ipAddress = req.headers['x-forwarded-for'];
 
     // User-Agent 정보 가져오기
     const userAgent = req.headers['user-agent'];

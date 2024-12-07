@@ -23,7 +23,7 @@ export class PostController {
   @Get()
   async getPosts(@Req() req: Request) {
     const page = req.query.page ? Number(req.query.page) : 1;
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const limit = req.query.limit ? Number(req.query.limit) : 7;
     return this.postService.getPosts(page, limit);
   }
 
@@ -31,7 +31,7 @@ export class PostController {
   async getPostsByCategory(@Req() req: Request) {
     const categoryId = Number(req.params.categoryId);
     const page = req.query.page ? Number(req.query.page) : 1;
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const limit = req.query.limit ? Number(req.query.limit) : 7;
     return await this.postService.getPostsByCategory(categoryId, page, limit);
   }
 

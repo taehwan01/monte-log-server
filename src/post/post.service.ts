@@ -152,6 +152,7 @@ export class PostService {
         )
         .eq('category_id', categoryId)
         .eq('visibility', true)
+        .order('post_id', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) {

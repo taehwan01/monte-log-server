@@ -59,4 +59,23 @@ export class RedisService {
       // Redis가 실패해도 계속 진행
     }
   }
+
+  async scanKeys(pattern: string): Promise<string[]> {
+    const keys: string[] = [];
+    let cursor = '0';
+
+    do {
+      const [nextCursor, matchedKeys] = await this.client.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      );
+      cursor = nextCursor;
+      keys.push(...matchedKeys);
+    } while (cursor !== '0');
+
+    return keys;
+  }
 }

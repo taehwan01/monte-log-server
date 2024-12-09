@@ -6,7 +6,7 @@ import { VisitorRepository } from './visitor.repository';
 
 @Module({
   imports: [RedisModule],
-  providers: [VisitorService, VisitorRepository],
+  providers: [VisitorService, VisitorRepository, VisitorModule],
   controllers: [VisitorController],
 })
 export class VisitorModule {}

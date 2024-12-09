@@ -401,14 +401,10 @@ export class PostService {
     return count;
   }
 
-  // 스케줄러로 Redis 캐시 1시간마다 갱신
-  @Cron('0 0 * * * *')
-  async refreshPostCache() {
+  async refreshPostCache(): Promise<void> {
     const page = 1;
-    const limit = 7; // 프론트엔드에서 7개씩 보여주기로 했으므로 7로 설정
+    const limit = 7;
     const offset = (page - 1) * limit;
-
-    console.log('Redis posts_page_1 캐시 갱신');
 
     try {
       const { data, error } = await this.supabase
@@ -433,9 +429,9 @@ export class PostService {
         throw new Error(`게시물 조회 오류: ${error.message}`);
       }
 
-      await this.redisService.set('posts_page_1', JSON.stringify(data), 3600); // 1시간 TTL로 캐싱
+      await this.redisService.set('posts_page_1', JSON.stringify(data), 86400);
     } catch (err) {
-      console.error('Redis 캐시 갱신 실패:', err.message);
+      throw new Error(err.message);
     }
   }
 }

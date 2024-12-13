@@ -14,7 +14,6 @@ export class SupabaseService {
       throw new Error('Supabase URL or Service Role Key is not configured');
     }
 
-    console.log({ supabaseUrl });
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 

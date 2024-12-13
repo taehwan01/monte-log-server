@@ -36,8 +36,7 @@ export class VisitorRepository {
       throw new Error(`Failed to get total visitors: ${error.message}`);
     }
 
-    const uniqueVisitors = new Set(data.map((record) => record.user_key)).size;
-    return uniqueVisitors || 0;
+    return data.length || 0;
   }
 
   // 오늘 방문자 수 조회
@@ -51,7 +50,6 @@ export class VisitorRepository {
       throw new Error(`Failed to get today's visitors: ${error.message}`);
     }
 
-    const uniqueVisitors = new Set(data.map((record) => record.user_key)).size;
-    return uniqueVisitors || 0;
+    return data.length || 0;
   }
 }

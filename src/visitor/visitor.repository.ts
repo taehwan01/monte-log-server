@@ -1,17 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
+import { SupabaseService } from 'src/common/supabase/supabase.service';
 
 @Injectable()
 export class VisitorRepository {
-  private supabase;
+  private readonly supabase: SupabaseClient;
 
-  constructor(private configService: ConfigService) {
-    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>(
-      'SUPABASE_SERVICE_ROLE_KEY',
-    );
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+  constructor(private readonly supabaseService: SupabaseService) {
+    this.supabase = this.supabaseService.getClient();
   }
 
   // 방문 기록 삽입
@@ -33,26 +30,28 @@ export class VisitorRepository {
   async getTotalVisitors(): Promise<number> {
     const { data, error } = await this.supabase
       .from('visitor')
-      .select('user_key', { count: 'exact', distinct: true });
+      .select('user_key', { count: 'exact' });
 
     if (error) {
       throw new Error(`Failed to get total visitors: ${error.message}`);
     }
 
-    return data.length || 0;
+    const uniqueVisitors = new Set(data.map((record) => record.user_key)).size;
+    return uniqueVisitors || 0;
   }
 
   // 오늘 방문자 수 조회
   async getTodayVisitors(visitDate: string): Promise<number> {
     const { data, error } = await this.supabase
       .from('visitor')
-      .select('user_key', { count: 'exact', distinct: true })
+      .select('user_key', { count: 'exact' })
       .eq('visited_date', visitDate);
 
     if (error) {
       throw new Error(`Failed to get today's visitors: ${error.message}`);
     }
 
-    return data.length || 0;
+    const uniqueVisitors = new Set(data.map((record) => record.user_key)).size;
+    return uniqueVisitors || 0;
   }
 }

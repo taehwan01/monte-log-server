@@ -1,24 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 import { CreatePostDto } from './create-post.dto';
 import { RedisService } from 'src/common/redis/redis.service';
 import { Cron } from '@nestjs/schedule';
+import { SupabaseService } from 'src/common/supabase/supabase.service';
 
 @Injectable()
 export class PostService {
-  private supabase;
+  private readonly supabase: SupabaseClient;
 
   constructor(
-    private configService: ConfigService,
     private redisService: RedisService,
+    private readonly supabaseService: SupabaseService,
   ) {
-    // 환경 변수에서 Supabase URL과 API 키를 불러옴
-    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>(
-      'SUPABASE_SERVICE_ROLE_KEY',
-    );
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    this.supabase = this.supabaseService.getClient();
   }
 
   // 게시글 페이징 조회 메서드 추가
@@ -302,10 +298,6 @@ export class PostService {
 
     if (!data) {
       throw new Error('게시물이 존재하지 않습니다.');
-    }
-
-    if (!data.visibility) {
-      throw new Error('비공개 게시물입니다.');
     }
 
     return data;
